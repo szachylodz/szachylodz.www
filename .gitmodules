@@ -1,3 +1,6 @@
 [submodule "Activello"]
 	path = Activello
 	url = git@github.com:FreeWPTP/Activello.git
+[submodule "wp-content/themes/activello"]
+	path = wp-content/themes/activello
+	url = git@github.com:FreeWPTP/Activello.git
