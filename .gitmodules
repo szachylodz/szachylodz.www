@@ -1,0 +1,3 @@
+[submodule "Activello"]
+	path = Activello
+	url = git@github.com:FreeWPTP/Activello.git
