@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the 4.5.x package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2016-04-13 07:04:19+0000\n"
+"PO-Revision-Date: 2016-05-18 16:39:27+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -2582,7 +2582,7 @@ msgstr "<strong>BŁĄD</strong>: Ciasteczka są wyłączone lub nie są wspieran
 
 #: wp-includes/media-template.php:1008
 msgid "Link CSS Class"
-msgstr "Odnośnik klasy CSS"
+msgstr "Klasa CSS odnośnika"
 
 #: wp-includes/media-template.php:788
 msgid "Show Video List"
