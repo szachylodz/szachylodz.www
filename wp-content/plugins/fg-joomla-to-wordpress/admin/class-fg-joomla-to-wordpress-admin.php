@@ -257,6 +257,7 @@ if ( !class_exists('FG_Joomla_to_WordPress_Admin', false) ) {
 				'archived_posts'		=> 'not_imported',
 				'skip_media'			=> 0,
 				'featured_image'		=> 'fulltext',
+				'only_featured_image'	=> 0,
 				'remove_first_image'	=> 0,
 				'import_external'		=> 0,
 				'import_duplicates'		=> 0,
@@ -533,9 +534,6 @@ if ( !class_exists('FG_Joomla_to_WordPress_Admin', false) ) {
 
 			if ( $action == 'all' ) {
 				// Remove all content
-				$start_id = 1;
-				update_option('fgj2wp_start_id', $start_id);
-
 				$sql_queries[] = "TRUNCATE $wpdb->commentmeta";
 				$sql_queries[] = "TRUNCATE $wpdb->comments";
 				$sql_queries[] = "TRUNCATE $wpdb->term_relationships";
@@ -554,77 +552,111 @@ WHERE term_id > 1 -- non-classe
 SQL;
 				$sql_queries[] = "ALTER TABLE $wpdb->terms AUTO_INCREMENT = 2";
 				$sql_queries[] = "ALTER TABLE $wpdb->term_taxonomy AUTO_INCREMENT = 2";
+				
 			} else {
-				// Remove only new imported posts
-				// WordPress post ID to start the deletion
-				$start_id = intval(get_option('fgj2wp_start_id'));
-				if ( $start_id != 0) {
-
-					$sql_queries[] = <<<SQL
--- Delete Comments meta
-DELETE FROM $wpdb->commentmeta
-WHERE comment_id IN
-(
-SELECT comment_ID FROM $wpdb->comments
-WHERE comment_post_ID IN
-	(
-	SELECT ID FROM $wpdb->posts
-	WHERE (post_type IN ('post', 'page', 'attachment', 'revision')
-	OR post_status = 'trash'
-	OR post_title = 'Brouillon auto')
-	AND ID >= $start_id
-	)
-);
+				
+				// (Re)create a temporary table with the IDs to delete
+				$sql_queries[] = <<<SQL
+DROP TEMPORARY TABLE IF EXISTS {$wpdb->prefix}fg_data_to_delete;
 SQL;
 
-					$sql_queries[] = <<<SQL
--- Delete Comments
-DELETE FROM $wpdb->comments
-WHERE comment_post_ID IN
-(
-SELECT ID FROM $wpdb->posts
-WHERE (post_type IN ('post', 'page', 'attachment', 'revision')
-OR post_status = 'trash'
-OR post_title = 'Brouillon auto')
-AND ID >= $start_id
-);
+				$sql_queries[] = <<<SQL
+CREATE TEMPORARY TABLE IF NOT EXISTS {$wpdb->prefix}fg_data_to_delete (
+`id` bigint(20) unsigned NOT NULL,
+PRIMARY KEY (`id`)
+) DEFAULT CHARSET=utf8;
+SQL;
+				
+				// Insert the imported posts IDs in the temporary table
+				$sql_queries[] = <<<SQL
+INSERT IGNORE INTO {$wpdb->prefix}fg_data_to_delete (`id`)
+SELECT post_id FROM $wpdb->postmeta
+WHERE meta_key LIKE '_fgj2wp_%'
+SQL;
+				
+				// Delete the imported posts and related data
+
+				$sql_queries[] = <<<SQL
+-- Delete Comments and Comment metas
+DELETE c, cm
+FROM $wpdb->comments c
+LEFT JOIN $wpdb->commentmeta cm ON cm.comment_id = c.comment_ID
+INNER JOIN {$wpdb->prefix}fg_data_to_delete del
+WHERE c.comment_post_ID = del.id;
 SQL;
 
-					$sql_queries[] = <<<SQL
+				$sql_queries[] = <<<SQL
 -- Delete Term relashionships
-DELETE FROM $wpdb->term_relationships
-WHERE `object_id` IN
-(
-SELECT ID FROM $wpdb->posts
-WHERE (post_type IN ('post', 'page', 'attachment', 'revision')
-OR post_status = 'trash'
-OR post_title = 'Brouillon auto')
-AND ID >= $start_id
-);
+DELETE tr
+FROM $wpdb->term_relationships tr
+INNER JOIN {$wpdb->prefix}fg_data_to_delete del
+WHERE tr.object_id = del.id;
 SQL;
 
-					$sql_queries[] = <<<SQL
--- Delete Post meta
-DELETE FROM $wpdb->postmeta
-WHERE post_id IN
-(
-SELECT ID FROM $wpdb->posts
-WHERE (post_type IN ('post', 'page', 'attachment', 'revision')
-OR post_status = 'trash'
-OR post_title = 'Brouillon auto')
-AND ID >= $start_id
-);
+				$sql_queries[] = <<<SQL
+-- Delete Posts Children and Post metas
+DELETE p, pm
+FROM $wpdb->posts p
+LEFT JOIN $wpdb->postmeta pm ON pm.post_id = p.ID
+INNER JOIN {$wpdb->prefix}fg_data_to_delete del
+WHERE p.post_parent = del.id;
 SQL;
 
-					$sql_queries[] = <<<SQL
--- Delete Posts
-DELETE FROM $wpdb->posts
-WHERE (post_type IN ('post', 'page', 'attachment', 'revision')
-OR post_status = 'trash'
-OR post_title = 'Brouillon auto')
-AND ID >= $start_id;
+				$sql_queries[] = <<<SQL
+-- Delete Posts and Post metas
+DELETE p, pm
+FROM $wpdb->posts p
+LEFT JOIN $wpdb->postmeta pm ON pm.post_id = p.ID
+INNER JOIN {$wpdb->prefix}fg_data_to_delete del
+WHERE p.ID = del.id;
 SQL;
-				}
+
+				// Truncate the temporary table
+				$sql_queries[] = <<<SQL
+TRUNCATE {$wpdb->prefix}fg_data_to_delete;
+SQL;
+				
+				// Insert the imported terms IDs in the temporary table
+				$sql_queries[] = <<<SQL
+INSERT IGNORE INTO {$wpdb->prefix}fg_data_to_delete (`id`)
+SELECT term_id FROM $wpdb->termmeta
+WHERE meta_key LIKE '_fgj2wp_%'
+SQL;
+				
+				// Delete the imported terms and related data
+
+				$sql_queries[] = <<<SQL
+-- Delete Terms, Term taxonomies and Term metas
+DELETE t, tt, tm
+FROM $wpdb->terms t
+LEFT JOIN $wpdb->term_taxonomy tt ON tt.term_id = t.term_id
+LEFT JOIN $wpdb->termmeta tm ON tm.term_id = t.term_id
+INNER JOIN {$wpdb->prefix}fg_data_to_delete del
+WHERE t.term_id = del.id;
+SQL;
+
+				// Truncate the temporary table
+				$sql_queries[] = <<<SQL
+TRUNCATE {$wpdb->prefix}fg_data_to_delete;
+SQL;
+				
+				// Insert the imported comments IDs in the temporary table
+				$sql_queries[] = <<<SQL
+INSERT IGNORE INTO {$wpdb->prefix}fg_data_to_delete (`id`)
+SELECT comment_id FROM $wpdb->commentmeta
+WHERE meta_key LIKE '_fgj2wp_%'
+SQL;
+				
+				// Delete the imported comments and related data
+				$sql_queries[] = <<<SQL
+-- Delete Comments and Comment metas
+DELETE c, cm
+FROM $wpdb->comments c
+LEFT JOIN $wpdb->commentmeta cm ON cm.comment_id = c.comment_ID
+INNER JOIN {$wpdb->prefix}fg_data_to_delete del
+WHERE c.comment_ID = del.id;
+SQL;
+
 			}
 
 			// Execute SQL queries
@@ -637,6 +669,9 @@ SQL;
 			// Hook for doing other actions after emptying the database
 			do_action('fgj2wp_post_empty_database', $action);
 
+			// Drop the temporary table
+			$wpdb->query("DROP TEMPORARY TABLE IF EXISTS {$wpdb->prefix}fg_data_to_delete;");
+				
 			// Reset the Joomla import counters
 			update_option('fgj2wp_last_article_id', 0);
 			update_option('fgj2wp_last_category_id', 0);
@@ -903,6 +938,7 @@ SQL;
 				'archived_posts'		=> filter_input(INPUT_POST, 'archived_posts', FILTER_SANITIZE_STRING),
 				'skip_media'			=> filter_input(INPUT_POST, 'skip_media', FILTER_VALIDATE_BOOLEAN),
 				'featured_image'		=> filter_input(INPUT_POST, 'featured_image', FILTER_SANITIZE_STRING),
+				'only_featured_image'	=> filter_input(INPUT_POST, 'only_featured_image', FILTER_VALIDATE_BOOLEAN),
 				'remove_first_image'	=> filter_input(INPUT_POST, 'remove_first_image', FILTER_VALIDATE_BOOLEAN),
 				'import_external'		=> filter_input(INPUT_POST, 'import_external', FILTER_VALIDATE_BOOLEAN),
 				'import_duplicates'		=> filter_input(INPUT_POST, 'import_duplicates', FILTER_VALIDATE_BOOLEAN),
@@ -1122,6 +1158,10 @@ SQL;
 
 				// Check if the category is already imported
 				if ( array_key_exists($category_id, $this->imported_categories) ) {
+					// Prevent the process to hang if the categories counter has been resetted
+					$category_id_without_prefix = preg_replace('/^(\D*)/', '', $category_id);
+					update_option($last_category_metakey, $category_id_without_prefix);
+
 					continue; // Do not import already imported category
 				}
 				
@@ -1218,13 +1258,6 @@ SQL;
 
 			$this->log(__('Importing posts...', 'fg-joomla-to-wordpress'));
 			
-			// Set the WordPress post ID to start the deletion (used when we want to remove only the new imported posts)
-			$start_id = intval(get_option('fgj2wp_start_id'));
-			if ( $start_id == 0) {
-				$start_id = $this->get_next_post_autoincrement();
-				update_option('fgj2wp_start_id', $start_id);
-			}
-
 			// Hook for doing other actions before the import
 			do_action('fgj2wp_pre_import_posts');
 
@@ -1287,21 +1320,19 @@ SQL;
 			// Date
 			$post_date = ($post['date'] != '0000-00-00 00:00:00')? $post['date']: $post['modified'];
 
-			// Featured image
-			$featured_image_id = '';
-
 			// Medias
+			$post_media = array();
+			$featured_image_id = '';
 			if ( !$this->plugin_options['skip_media'] ) {
 				// Featured image
 				list($featured_image_id, $post) = $this->get_and_process_featured_image($post);
 				
 				// Import media
-				$result = $this->import_media_from_content($post['introtext'] . $post['fulltext'], $post_date);
-				$post_media = $result['media'];
-				$this->media_count += $result['media_count'];
-			} else {
-				// Skip media
-				$post_media = array();
+				if ( !$this->plugin_options['only_featured_image'] ) {
+					$result = $this->import_media_from_content($post['introtext'] . $post['fulltext'], $post_date);
+					$post_media = $result['media'];
+					$this->media_count += $result['media_count'];
+				}
 			}
 
 			// Categories IDs
@@ -1363,7 +1394,10 @@ SQL;
 			$new_post = apply_filters('fgj2wp_pre_insert_post', $new_post, $post);
 
 			$new_post_id = wp_insert_post($new_post, true);
-
+			
+			// Increment the Joomla last imported post ID
+			update_option('fgj2wp_last_article_id', $post['id']);
+			
 			if ( is_wp_error($new_post_id) ) {
 				$this->display_admin_error(sprintf(__('Article #%d:', 'fg-joomla-to-wordpress'), $post['id']) . ' ' . $new_post_id->get_error_message());
 			} else {
@@ -1383,9 +1417,6 @@ SQL;
 				// Hook for doing other actions after inserting the post
 				do_action('fgj2wp_post_insert_post', $new_post_id, $post);
 			}
-			
-			// Increment the Joomla last imported post ID
-			update_option('fgj2wp_last_article_id', $post['id']);
 
 			return $new_post_id;
 		}
@@ -1607,7 +1638,7 @@ SQL;
 			$extra_joins = apply_filters('fgj2wp_get_posts_add_extra_joins', '');
 
 			$sql = "
-				SELECT DISTINCT p.id, p.title, p.alias, p.introtext, p.fulltext, p.state, p.catid, p.modified, p.created AS `date`, p.attribs, p.metakey, p.metadesc, p.ordering
+				SELECT DISTINCT p.id, 'content' AS type, p.title, p.alias, p.introtext, p.fulltext, p.state, p.catid, p.modified, p.created AS `date`, p.attribs, p.metakey, p.metadesc, p.ordering
 				$extra_cols
 				FROM ${prefix}content p
 				$extra_joins
@@ -1654,8 +1685,11 @@ SQL;
 					$excerpt = $post['introtext'];
 					$content = $post['introtext'] . "\n" . $post['fulltext'];
 				} else {
-					// Introtext imported in post content with a "Read more" tag
-					$content = $post['introtext'] . "\n<!--more-->\n" . $post['fulltext'];
+					if ( $show_intro !== '0' ) {
+						// Introtext imported in post content with a "Read more" tag
+						$content = $post['introtext'] . "\n<!--more-->\n";
+					}
+					$content .= $post['fulltext'];
 				}
 			}
 			return array($excerpt, $content);
@@ -1843,7 +1877,7 @@ SQL;
 		 * @return int|false Attachment ID or false
 		 */
 		public function insert_attachment($attachment_title, $basename, $new_full_filename, $guid, $date, $filetype, $image_alt='') {
-			$post_name = sanitize_title($attachment_title);
+			$post_name = 'attachment-' . sanitize_title($attachment_title); // Prefix the post name to avoid wrong redirect to a post with the same name
 			
 			// If the attachment does not exist yet, insert it in the database
 			$attachment_id = 0;
@@ -1865,6 +1899,7 @@ SQL;
 					'post_content'		=> '',
 				);
 				$attachment_id = wp_insert_attachment($attachment_data, $new_full_filename);
+				add_post_meta($attachment_id, '_fgj2wp_imported', 1, true); // To delete the imported attachments
 			}
 			
 			if ( !empty($attachment_id) ) {
@@ -2529,7 +2564,7 @@ SQL;
 			global $wpdb;
 			$users = array();
 
-			$sql = "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = 'joomla_user_id'";
+			$sql = "SELECT user_id, meta_value FROM {$wpdb->usermeta} WHERE meta_key = '_fgj2wp_old_user_id'";
 			$results = $wpdb->get_results($sql);
 			foreach ( $results as $result ) {
 				$users[$result->meta_value] = $result->user_id;

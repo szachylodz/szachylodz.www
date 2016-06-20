@@ -1,10 +1,10 @@
 === FG Joomla to WordPress ===
 Contributors: Frédéric GILLES
 Plugin Uri: https://wordpress.org/plugins/fg-joomla-to-wordpress/
-Tags: joomla, mambo, wordpress, importer, convert joomla to wordpress, migrate joomla to wordpress, joomla to wordpress migration, migrator, converter, import, k2, jcomments, joomlacomments, jomcomment, flexicontent, postviews, joomlatags, sh404sef, attachments, rokbox, kunena, phocagallery, phoca, joomsef, opensef, easyblog, zoo, zooitems, joomfish, joom!fish, wpml, joomgallery, jevents, contact directory, docman, virtuemart, woocommerce, jreviews, mosets tree, wpml, simple image gallery, rsgallery
+Tags: joomla, mambo, elxis, wordpress, importer, convert joomla to wordpress, migrate joomla to wordpress, joomla to wordpress migration, migrator, converter, import, k2, jcomments, joomlacomments, jomcomment, flexicontent, postviews, joomlatags, sh404sef, attachments, rokbox, kunena, phocagallery, phoca, joomsef, opensef, easyblog, zoo, zooitems, joomfish, joom!fish, wpml, joomgallery, jevents, contact directory, docman, virtuemart, woocommerce, jreviews, mosets tree, wpml, simple image gallery, rsgallery
 Requires at least: 4.4
 Tested up to: 4.5.2
-Stable tag: 3.10.0
+Stable tag: 3.13.1
 License: GPL-2.0+
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=fred%2egilles%40free%2efr&lc=FR&item_name=fg-joomla-to-wordpress&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
@@ -105,13 +105,18 @@ These modules can be purchased on: http://www.fredericgilles.net/fg-joomla-to-wo
 
 = I get the message: "[fg-joomla-to-wordpress] Couldn't connect to the Joomla database. Please check your parameters. And be sure the WordPress server can access the Joomla database. SQLSTATE[28000] [1045] Access denied for user 'xxx'@'localhost' (using password: YES)" =
 
-* First verify your login and password to your Joomla database.
-* If Joomla and WordPress are not installed on the same host, you can do this:
-- export the Joomla database to a SQL file (with phpMyAdmin for example)
-- import this SQL file on the same database as WordPress
-- run the migration by using WordPress database credentials (host, user, password, database) instead of the Joomla ones in the plugin settings.
+* First verify your login and password to the Joomla database.
+If Joomla and WordPress are not installed on the same host:
+* If you use CPanel on the Joomla server, a solution is to allow a remote MySQL connection.
+ - go into the Cpanel of the Joomla server
+ - go down to Database section and click "Remote MySQL"
+ - There you can add an access host (WordPress host). Enter the access host as the SOME-WEBSITE-DOMAIN-OR-IP-ADDRESS and click add host.
+* Another solution is to copy the Joomla database on the WordPress database:
+ - export the Joomla database to a SQL file (with phpMyAdmin for example)
+ - import this SQL file on the same database as WordPress
+ - run the migration by using WordPress database credentials (host, user, password, database) instead of the Joomla ones in the plugin settings.
 
-= I get this error when testing the connection: "SQLSTATE[HY000] [2002] Connection refused" or "SQLSTATE[HY000] [2002] No such file or directory"
+= I get this error when testing the connection: "SQLSTATE[HY000] [2002] Connection refused" or "SQLSTATE[HY000] [2002] No such file or directory" =
 
 * This error happens when the host is set like localhost:/tmp/mysql5d.sock
 Instead, you must set the host to be localhost;unix_socket=/tmp/mysql5d.sock
@@ -217,6 +222,24 @@ http://wordpress.org/support/plugin/fg-joomla-to-wordpress
 * other can be translated
 
 == Changelog ==
+
+= 3.13.1 =
+* Fixed: Don't import the introtext in the post content if it is marked as hidden on Joomla
+
+= 3.13.0 =
+* New: Compatibility between the Joom!Fish and Docman add-ons
+* Fixed: Wrong redirect when an attachment has the same name as a post
+
+= 3.12.0 =
+* Fixed: Rewrite the function to delete only the imported data
+* Fixed: Categories import can hang if the import counter was resetted and the imported categories were not deleted
+
+= 3.11.0 =
+* New: Option to import the featured images only
+
+= 3.10.2 =
+* Fixed: The message "[ERROR] The import process is still running. Please wait before running it again." sometimes appears after the process has crashed, and it prevents the import process to resume
+* FAQ updated
 
 = 3.10.0 =
 * New: Add some hooks
@@ -777,6 +800,20 @@ http://wordpress.org/support/plugin/fg-joomla-to-wordpress
 * Initial version: Import Joomla 1.5 sections, categories, posts and images
 
 == Upgrade Notice ==
+
+= 3.13.1 =
+Fixed: Don't import the introtext in the post content if it is marked as hidden on Joomla
+
+= 3.12.0 =
+Fixed: Rewrite the function to delete only the imported data
+Fixed: Categories import can hang if the import counter was resetted and the imported categories were not deleted
+
+= 3.11.0 =
+New: Option to import the featured images only
+
+= 3.10.2 =
+Fixed: The message "[ERROR] The import process is still running. Please wait before running it again." sometimes appears after the process has crashed, and it prevents the import process to resume
+FAQ updated
 
 = 3.10.0 =
 New: Add some hooks

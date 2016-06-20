@@ -142,7 +142,10 @@
 			method: "POST",
 			url: ajaxurl,
 			data: data
-		    }).done(function() {
+		    }).done(function(result) {
+			if (result) {
+			    that.fatal_error = result;
+			}
 			that.stop_logger();
 			$('#empty').removeAttr('disabled'); // Enable the button
 			alert(objectL10n.content_removed_from_wordpress);
