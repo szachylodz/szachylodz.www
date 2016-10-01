@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the Network Admin package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2016-03-20 07:17:12+0000\n"
+"PO-Revision-Date: 2016-06-13 14:27:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,7 +14,7 @@ msgstr ""
 #: wp-admin/network/themes.php:148
 msgctxt "theme"
 msgid "%1$s by %2$s"
-msgstr "%1$s od %2$s"
+msgstr "%1$s autorstwa %2$s"
 
 #. translators: %s: edit page url
 #: wp-admin/network/user-new.php:83
@@ -59,12 +59,12 @@ msgstr "Ponieważ używasz %1$s, witryny w twojej sieci witryn WordPressa muszą
 #. translators: 1: wp-config.php 2: web.config
 #: wp-admin/includes/network.php:382 wp-admin/includes/network.php:390
 msgid "We recommend you back up your existing %1$s and %2$s files."
-msgstr "Zalecamy utworzenie kopii plików: %1$s i %2$s."
+msgstr "Zalecamy utworzenie kopii zapasowych plików: %1$s i %2$s."
 
 #. translators: 1: wp-config.php
 #: wp-admin/includes/network.php:398
 msgid "We recommend you back up your existing %s file."
-msgstr "Zalecamy utworzenie kopii pliku %s."
+msgstr "Zalecamy utworzenie kopii zapasowej pliku %s."
 
 #. translators: 1: wp-config.php 2: location of wp-config file
 #: wp-admin/includes/network.php:409
@@ -215,7 +215,7 @@ msgstr "Włącz %s"
 #. translators: %s: theme name
 #: wp-admin/includes/class-wp-ms-themes-list-table.php:414
 msgid "Network Enable %s"
-msgstr "Włącz sieciowo %s"
+msgstr "Włącz %s w sieci witryn"
 
 #. translators: %s: theme name
 #: wp-admin/includes/class-wp-ms-themes-list-table.php:433
@@ -225,12 +225,12 @@ msgstr "Wyłącz %s"
 #. translators: %s: theme name
 #: wp-admin/includes/class-wp-ms-themes-list-table.php:436
 msgid "Network Disable %s"
-msgstr "Wyłącz sieciowo %s"
+msgstr "Wyłącz %s w sieci witryn"
 
 #. translators: %s: theme name
 #: wp-admin/includes/class-wp-ms-themes-list-table.php:452
 msgid "Open %s in the Theme Editor"
-msgstr "Otwórz %s w edytorze motywu"
+msgstr "Otwórz %s w edytorze motywów"
 
 #: wp-admin/includes/class-wp-ms-themes-list-table.php:536
 msgid "Broken Theme:"
@@ -1043,7 +1043,7 @@ msgstr "Ustawienia wysyłania na serwer określają maksymalny rozmiar plików w
 
 #: wp-admin/network/sites.php:38
 msgid "Visit to go to the front-end site live."
-msgstr "Przejdź do witryny."
+msgstr "Odwiedź przenosi na witrynę w widoku takim, jaki ujrzą odwiedzający ją użytkownicy."
 
 #: wp-admin/network/settings.php:34
 msgid "New site settings are defaults applied when a new site is created in the network. These include welcome email for when a new site or user account is registered, and what&#8127;s put in the first post, page, comment, comment author, and comment URL."

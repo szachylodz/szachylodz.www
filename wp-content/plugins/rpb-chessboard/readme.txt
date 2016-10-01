@@ -2,7 +2,7 @@
 Contributors: yo35
 Tags: chess, chessboard, fen, pgn, games
 Requires at least: 3.9
-Tested up to: 4.4
+Tested up to: 4.6
 Stable tag: trunk
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -112,6 +112,20 @@ Please [contact the author](mailto:yo35@melix.net) for this.
 
 
 == Changelog ==
+
+= 4.4 (August 31, 2016) =
+* Add keyboard shortcuts to the FEN editor (see #67).
+* Tested up to WordPress 4.6.
+
+= 4.3.3 (August 7, 2016) =
+* Fix animation not working when clicking on text moves (see #68).
+
+= 4.3.2 (July 3, 2016) =
+* Fix wrong colorset/pieceset parameters in navigation frame (see #66).
+
+= 4.3.1 (June 16, 2016) =
+* Minor fixes.
+* Tested up to WordPress 4.5.
 
 = 4.3 (March 10, 2016) =
 * Add colorset and pieceset customization parameters (see #13 and #29).
@@ -328,7 +342,7 @@ Piecesets *Celtic*, *Eyes*, *Fantasy*, *Skulls* and *Spatial* have been created 
 Colorsets *Coral*, *Dusk*, *Emerald*, *Marine*, *Sandcastle* and *Wheat* have been proposed
 in this [blog post](http://omgchess.blogspot.fr/2015/09/chess-board-color-schemes.html)
 by [Gorgonian](http://omgchess.blogspot.fr/).
-Icons *Undo*, *Redo*, and *Delete* have been created by [Momentum Design Lab](http://momentumdesignlab.com/),
+Icons *Undo*, *Redo*, *Delete* and *Tick* have been created by [Momentum Design Lab](http://momentumdesignlab.com/),
 who shares them under the [CC-BY] license on [Find Icons](http://findicons.com/pack/2226/matte_basic).
 
 The author would like to thank all these people for their highly valuable work.
